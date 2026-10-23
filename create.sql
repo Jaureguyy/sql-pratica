@@ -10,7 +10,7 @@ Drop table if exists compras;
 create table if not exists clientes (
     id_cliente integer primary key,
     nome text not null,
-    cpf integer not null,
+    cpf integer integer not null,
     estado text
 );
 
