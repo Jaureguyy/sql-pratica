@@ -2,10 +2,16 @@ pragma foreign_keys = on;
 
 -- Drop de tables para recriar se necessário:
 
-Drop table if exists clientes;
-Drop table if exists produtos;
-Drop table if exists Histórico_de_Compras;
-Drop table if exists compras;
+drop table if exists compras;
+drop table if exists historico_de_compras;
+drop table if exists produtos;
+drop table if exists clientes;
+
+-- anteriormente a ordem era a inversa. Porém por questão lógica, deve-se apagar primeiro quem aponta e depois quem quem é "apontado".
+-- Ex.: Uma compra aponta para um cliente ; caso apague o cliente primeiro, a compra ainda aponta para ele. Logo primeiro deve-se deletar a compra e depois a pessoa.
+
+
+-- Create Table
 
 create table if not exists clientes (
     id_cliente integer primary key,
