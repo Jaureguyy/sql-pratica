@@ -1,5 +1,8 @@
 # SQL
 
-Início do repositório SQL.
- 
-Iniciando do 0.
+### Tema do Data Base: E-commerce
+## Tabelas:
+- Clientes
+- Produtos
+- Histórico de Compras
+- Compras (ligação)
