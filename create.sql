@@ -16,13 +16,13 @@ drop table if exists clientes;
 create table if not exists clientes (
     id_cliente integer primary key,
     nome text not null,
-    cpf integer integer not null,
-    estado text
+    cpf text not null unique,
+    estado text not null
 );
 
 create table if not exists produtos (
     id_produto integer primary key,
-    nome text,
+    nome text not null unique,
     preco numeric not null,
     estoque integer not null
 );
