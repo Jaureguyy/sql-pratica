@@ -45,3 +45,25 @@ Para entender o update acima, montei a seguinte frase:
 Para cada linha do histórico, atualiza com a soma quantidade*valor_unidade dos itens de compra com o mesmo id_compra, guardando o resultado em valor_compra
 */
 
+-----------------------------------------------
+
+
+--Agora será necessário dar "baixa" no estoque. Isto será feito pegando a quantidade na tabela COMPRAS e substrair em estoque tabela PRODUTOS
+
+/*
+O update acontece na tabela PRODUTOS, coluna ESTOQUE. 
+Começando a subconsulta, primeiro temos a quantidade em estoque, depois a soma da quantidade vendida em COMPRAS. Importante diferencias qual tabela está "fora" (produtos) e qual está "dentro" (from COMPRAS). O where da subquery é utilizado da mesma maneira que o update anterior para valor_compra, o primeiro valor é aqule que está sendo "analizado" e o id da tabela de "fora" qual "linha" será atualizada.
+O where fora da consulta serve para verificar se o id do produto está dentro de compras, assim evita o erro de NOT NULL
+*/
+
+update produtos
+set estoque = (                      
+    select produtos.estoque - sum(compras.quantidade)
+    from compras
+    where compras.id_produto = produtos.id_produto
+)
+where produtos.id_produto in (
+    select id_produto from compras
+    group by id_produto
+);
+
