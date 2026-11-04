@@ -11,12 +11,12 @@ O insert no histórico é apenas com o cliente e a data. O id_compra é preenchi
 
 insert into historico_de_compras (id_cliente, data)
 values
-(2, '24/10/2026'),
-(2, '17/10/2026'),
-(8, '24/10/2026'),
-(7, '23/10/2026'),
-(5, '23/10/2026'),
-(10, '23/10/2026');
+(2, '2026-10-24'),
+(2, '2026-10-17'),
+(8, '2026-10-24'),                -- O formato das datas agora é: AAAA-MM-DD
+(7, '2026-10-23'),
+(5, '2026-10-23'),
+(10, '2026-10-23');
 
 insert into compras (id_compra, id_produto, quantidade, valor_unidade)
 values
