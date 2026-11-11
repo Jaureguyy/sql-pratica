@@ -40,3 +40,14 @@ select nome, preco from produtos
 
 select nome, preco from produtos
     where preco > 50 and preco < 1000;
+
+---------------------------------------
+
+-- Menores preços registrados dos produtos nos últimos 7 dias
+
+select compras.id_produto, nome, min(valor_unidade) as valor_minimo, data
+from compras
+join produtos on compras.id_produto = produtos.id_produto
+join historico_de_compras on compras.id_compra = historico_de_compras.id_compra
+where data >= date('2026-10-31', '-7 days')
+group by compras.id_produto;
