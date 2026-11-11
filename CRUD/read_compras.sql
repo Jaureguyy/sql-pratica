@@ -16,3 +16,8 @@ select compras.id_produto as id, nome, sum(quantidade) from compras
 join produtos on compras.id_produto = produtos.id_produto
 group by compras.id_produto;
  
+-- Produtos pertencentes a compra
+
+select compras.id_compra, compras.id_produto, nome from compras
+join produtos on compras.id_produto = produtos.id_produto
+order by id_compra;
