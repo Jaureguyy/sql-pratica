@@ -27,4 +27,20 @@ def cadastrar_cliente():
     conn.close()
 
 
-cadastrar_cliente()
+def cadastrar_produto():
+    conn = sqlite3.connect('e-commerce.db')
+    cur = conn.cursor()
+
+    print("Vamos cadastrar um produto!\n")
+    nome = input("Digite o nome: ")
+    preco = input("Digite o preço: ")
+    estoque = input("Digite a qunatidade em estoque: ")
+
+    with conn:
+        cur.execute("""INSERT INTO produtos (nome, preco, estoque)
+                        VALUES (?, ?, ?)""",
+                        (nome, preco, estoque)
+                    )
+    conn.close()
+
+cadastrar_produto()
