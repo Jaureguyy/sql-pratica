@@ -51,8 +51,8 @@ def comprar():
     -Escolher o item      OK
     -Escolher a quantidade OK
     -Mostrar valor final   OK
-    -Confirmar compra
-    -Dar baixa no estoque
+    -Confirmar compra ------|-- Conectadas
+    -Dar baixa no estoque --|   OK
     -Adicionar compra no histórico
     -Adicionar infos na tabela compras
     """    
@@ -86,23 +86,32 @@ def comprar():
     #     print(f"PREÇO: {produtos[indice][preco]}")
     #     print(f"ESTOQUE: {produtos[indice][estoque]}")
 
+    with conn:
+        escolha = int(input(f"\nEscolha o item: "))
+        quantidade = int(input(f"Escolha a quantidade: "))
 
-    escolha = int(input(f"\nEscolha o item: "))
-    quantidade = int(input(f"Escolha a quantidade: "))
+        # print(f"\n\n{produtos[escolha]}\n\n")    #Confere a escolha se necessário
 
-    # print(f"\n\n{produtos[escolha]}\n\n")    #Confere a escolha se necessário
-
-    while quantidade>produtos[escolha]['estoque']:
-        print(f"\nQuantidade de itens muito alta")
-        quantidade = int(input(f"Escolha novamente:"))
+        while quantidade>produtos[escolha]['estoque']:
+            print(f"\nQuantidade de itens muito alta")
+            quantidade = int(input(f"Escolha novamente:"))
 
 
-    # print(f"Produto: {produtos[escolha]['nome']}")
-    # print(f"Quantidade: {quantidade}")                                  #Mostra as informações do produto escolhido
-    # print(f"Valor do produto: {produtos[escolha]['preco']}")
-    
-    valor_total = quantidade * produtos[escolha]['preco']
-    print(f"Valor total: R${valor_total}")
+        # print(f"Produto: {produtos[escolha]['nome']}")
+        # print(f"Quantidade: {quantidade}")                                  #Mostra as informações do produto escolhido
+        # print(f"Valor do produto: {produtos[escolha]['preco']}")
+        
+        valor_total = quantidade * produtos[escolha]['preco']
+        print(f"Valor total: R${valor_total}")
+
+        if confirmar_escolha("Confirmar Compra? ('s'/'n')"):
+            baixa_estoque(produtos[escolha]['id'], quantidade)
+            print(f"COMPRA REALIZADA!!!")
+        else:
+            print(f"COMPRA CANCELADA!!!")
+            conn.rollback()
+
+        
      
 
 def baixa_estoque(id_produto, quantidade_baixa):
@@ -115,3 +124,16 @@ def baixa_estoque(id_produto, quantidade_baixa):
                                     FROM produtos
                                     WHERE id_produto = ?) - ?
                         WHERE id_produto = ?""", (id_produto, quantidade_baixa, id_produto))
+
+
+def confirmar_escolha(pergunta):
+    while True:
+        resposta = input(f"{pergunta}: ").strip().lower()
+        if resposta in ('s', 'sim'):
+                return True
+        if resposta in ('n', 'nao'):
+            return False
+        print(f"Resposta Inválida. Digite novamente.")
+
+
+comprar()
