@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime, date, timedelta
 
 
 """
@@ -44,7 +45,7 @@ def cadastrar_produto():
     conn.close()
    
 
-def comprar():
+def comprar(cliente):
     """
     Para realizar uma compra, as seguintes etapas são necessárias:
     -Mostrar os itens     OK
@@ -86,6 +87,8 @@ def comprar():
     #     print(f"PREÇO: {produtos[indice][preco]}")
     #     print(f"ESTOQUE: {produtos[indice][estoque]}")
 
+
+    #Processa a compra
     with conn:
         escolha = int(input(f"\nEscolha o item: "))
         quantidade = int(input(f"Escolha a quantidade: "))
@@ -104,15 +107,32 @@ def comprar():
         valor_total = quantidade * produtos[escolha]['preco']
         print(f"Valor total: R${valor_total}")
 
+        #Chama confirmar_escolha() para finalizar ou não a compra
         if confirmar_escolha("Confirmar Compra? ('s'/'n')"):
             baixa_estoque(produtos[escolha]['id'], quantidade)
+
+            #Inserindo as informações em historico_de_compras e compras
+            data = data.date()
+            cur.execute("""INSERT INTO historico_de_compras
+                            id_cliente, valor_compra, data
+                            VALUES (?, ?, ?)""",
+                            (id_cliente, valor_total, data)
+            )
+
+            id_compra = cur.lastrowid   #Armazena o >>>ÚLTIMO id DA CONEXÃO<<<
+
+            cur.execute("""INSERT INTO compras
+                            id_compra, id_produto, quantidade, valor_unidade
+                            VALUES (?,?,?,?)""",
+                            (id_compra, produtos[escolha][id], quantidade, produtos[escolha])
+            )
+
+
             print(f"COMPRA REALIZADA!!!")
         else:
             print(f"COMPRA CANCELADA!!!")
             conn.rollback()
 
-        
-     
 
 def baixa_estoque(id_produto, quantidade_baixa):
     conn = sqlite3.connect('e-commerce.db')
@@ -135,5 +155,25 @@ def confirmar_escolha(pergunta):
             return False
         print(f"Resposta Inválida. Digite novamente.")
 
+def escolher_cliente():
+    conn = sqlite3.connect('e-commerce.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
 
-comprar()
+    clientes = {}
+
+    print(f"{'':<4}{'CLIENTE':<12}")
+    for indice, infos in enumerate(cur.execute("""
+        SELECT id_cliente, nome, cpf, estado FROM clientes"""), start=1):
+
+        id_cliente, nome, cpf, estado = int(infos['id_cliente']), infos['nome'], infos['cpf'], infos['estado']
+        clientes[indice] = {'id': id_cliente, 'nome': nome, 'cpf': cpf, 'estado': estado}
+        print(f"[{indice}] {nome:<12}")
+
+    escolha = int(input(f"Escolha o cliente: "))
+    # print(clientes[escolha])    #Confere se escolheu certo
+    cliente = clientes[escolha]
+    return cliente
+
+cliente = escolher_cliente()
+print(cliente)
