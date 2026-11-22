@@ -1,5 +1,4 @@
 import sqlite3
-from datetime import datetime, date, timedelta
 
 
 """
@@ -45,7 +44,7 @@ def cadastrar_produto():
     conn.close()
    
 
-def comprar(cliente):
+def comprar(id_cliente):
     """
     Para realizar uma compra, as seguintes etapas são necessárias:
     -Mostrar os itens     OK
@@ -54,7 +53,7 @@ def comprar(cliente):
     -Mostrar valor final   OK
     -Confirmar compra ------|-- Conectadas
     -Dar baixa no estoque --|   OK
-    -Adicionar compra no histórico
+    -Adicionar compra no histórico  OK
     -Adicionar infos na tabela compras
     """    
     
@@ -62,6 +61,7 @@ def comprar(cliente):
     conn.row_factory = sqlite3.Row
     conn.execute('PRAGMA foreign_key = ON')
     cur = conn.cursor()
+
 
     produtos = {}  #Criando agenda para guardar as infos e não chamar o db toda hora
 
@@ -88,7 +88,7 @@ def comprar(cliente):
     #     print(f"ESTOQUE: {produtos[indice][estoque]}")
 
 
-    #Processa a compra
+    #Processa a compra (Escolhe item+Quantidade ; confirma+baixa no estoque+ add no historico_compras/compras)
     with conn:
         escolha = int(input(f"\nEscolha o item: "))
         quantidade = int(input(f"Escolha a quantidade: "))
@@ -112,25 +112,25 @@ def comprar(cliente):
             baixa_estoque(produtos[escolha]['id'], quantidade)
 
             #Inserindo as informações em historico_de_compras e compras
-            data = data.date()
             cur.execute("""INSERT INTO historico_de_compras
-                            id_cliente, valor_compra, data
-                            VALUES (?, ?, ?)""",
-                            (id_cliente, valor_total, data)
+                            (id_cliente, valor_compra, data)
+                            VALUES (?, ?, date('now', 'localtime'))""",
+                            (id_cliente, valor_total)
             )
 
             id_compra = cur.lastrowid   #Armazena o >>>ÚLTIMO id DA CONEXÃO<<<
 
             cur.execute("""INSERT INTO compras
-                            id_compra, id_produto, quantidade, valor_unidade
+                            (id_compra, id_produto, quantidade, valor_unidade)
                             VALUES (?,?,?,?)""",
-                            (id_compra, produtos[escolha][id], quantidade, produtos[escolha])
+                            (id_compra, produtos[escolha]['id'], quantidade, produtos[escolha]['preco'])
             )
 
-
-            print(f"COMPRA REALIZADA!!!")
+            ##Finalizando, caso seja confirmado: finaliza as atualizações. Ao contrário tudo será perdido.
+            #Por isso o processamento se encontra dentro do "with conn"
+            print(f"\nCOMPRA REALIZADA!!!")
         else:
-            print(f"COMPRA CANCELADA!!!")
+            print(f"\nCOMPRA CANCELADA!!!")
             conn.rollback()
 
 
@@ -175,5 +175,6 @@ def escolher_cliente():
     cliente = clientes[escolha]
     return cliente
 
-cliente = escolher_cliente()
-print(cliente)
+cliente = escolher_cliente()['id']
+comprar(cliente)
+
