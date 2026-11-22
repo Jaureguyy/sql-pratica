@@ -54,7 +54,7 @@ def comprar(id_cliente):
     -Confirmar compra ------|-- Conectadas
     -Dar baixa no estoque --|   OK
     -Adicionar compra no histórico  OK
-    -Adicionar infos na tabela compras
+    -Adicionar infos na tabela compras OK
     """    
     
     conn = sqlite3.connect('e-commerce.db')
@@ -109,41 +109,42 @@ def comprar(id_cliente):
 
         #Chama confirmar_escolha() para finalizar ou não a compra
         if confirmar_escolha("Confirmar Compra? ('s'/'n')"):
-            baixa_estoque(produtos[escolha]['id'], quantidade)
+            if baixa_estoque(conn, produtos[escolha]['id'], quantidade):
 
-            #Inserindo as informações em historico_de_compras e compras
-            cur.execute("""INSERT INTO historico_de_compras
-                            (id_cliente, valor_compra, data)
-                            VALUES (?, ?, date('now', 'localtime'))""",
-                            (id_cliente, valor_total)
-            )
+                #Inserindo as informações em historico_de_compras e compras
+                cur.execute("""INSERT INTO historico_de_compras
+                                (id_cliente, valor_compra, data)
+                                VALUES (?, ?, date('now', 'localtime'))""",
+                                (id_cliente, valor_total)
+                )
 
-            id_compra = cur.lastrowid   #Armazena o >>>ÚLTIMO id DA CONEXÃO<<<
+                id_compra = cur.lastrowid   #Armazena o >>>ÚLTIMO id DA CONEXÃO<<<
 
-            cur.execute("""INSERT INTO compras
-                            (id_compra, id_produto, quantidade, valor_unidade)
-                            VALUES (?,?,?,?)""",
-                            (id_compra, produtos[escolha]['id'], quantidade, produtos[escolha]['preco'])
-            )
+                cur.execute("""INSERT INTO compras
+                                (id_compra, id_produto, quantidade, valor_unidade)
+                                VALUES (?,?,?,?)""",
+                                (id_compra, produtos[escolha]['id'], quantidade, produtos[escolha]['preco'])
+                )
 
-            ##Finalizando, caso seja confirmado: finaliza as atualizações. Ao contrário tudo será perdido.
-            #Por isso o processamento se encontra dentro do "with conn"
-            print(f"\nCOMPRA REALIZADA!!!")
+                ##Finalizando, caso seja confirmado: finaliza as atualizações. Ao contrário tudo será perdido.
+                #Por isso o processamento se encontra dentro do "with conn"
+                print(f"\nCOMPRA REALIZADA!!!")
+            else:
+                print(f"\nCOMPRA ENCERRADA!!!")
         else:
             print(f"\nCOMPRA CANCELADA!!!")
             conn.rollback()
 
 
-def baixa_estoque(id_produto, quantidade_baixa):
-    conn = sqlite3.connect('e-commerce.db')
-    cur = conn.cursor()
-
-    with conn:
-        cur.execute("""UPDATE produtos
-                        SET estoque = (SELECT estoque
-                                    FROM produtos
-                                    WHERE id_produto = ?) - ?
-                        WHERE id_produto = ?""", (id_produto, quantidade_baixa, id_produto))
+def baixa_estoque(conn, id_produto, quantidade_baixa):
+    cur = conn.execute(
+            """UPDATE produtos
+               SET estoque = estoque - ?
+                WHERE id_produto = ?
+                AND estoque >= ?""",
+                (quantidade_baixa, id_produto, quantidade_baixa)
+        )
+    return cur.rowcount == 1
 
 
 def confirmar_escolha(pergunta):
@@ -154,6 +155,7 @@ def confirmar_escolha(pergunta):
         if resposta in ('n', 'nao'):
             return False
         print(f"Resposta Inválida. Digite novamente.")
+
 
 def escolher_cliente():
     conn = sqlite3.connect('e-commerce.db')
