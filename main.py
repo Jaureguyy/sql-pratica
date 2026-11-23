@@ -76,7 +76,8 @@ def comprar(id_cliente):
         #Por conta do row_factory, eu posso indicar a coluna para desempacotar
 
         produtos[indice] = {'id':id, 'nome': nome, 'preco': preco, 'estoque': estoque}   #Adicionando na agenda
-        print(f"[{indice}] {nome:<20} {preco:>10.2f} {estoque:>12}")                     #Pontos: E se estoque==0?
+        if produtos[indice]['estoque'] > 0:
+            print(f"[{indice}] {nome:<20} {preco:>10.2f} {estoque:>12}")                     
 
 
     # for indice, informacoes in produtos.items():
@@ -177,6 +178,31 @@ def escolher_cliente():
     cliente = clientes[escolha]
     return cliente
 
-cliente = escolher_cliente()['id']
-comprar(cliente)
+def escolher_produto(com_estoque=False):
+    conn = sqlite3.connect('e-commerce.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
 
+    sql = 'SELECT * FROM produtos'
+
+    if com_estoque:
+        sql += ' WHERE estoque > 0'
+
+    produtos = {}                             #Cria a agenda para armazenar os produtos
+
+    print(f"ESCOLHA O PRODUTO:\n")
+    print(f"{'':<6} {'PRODUTO':<20} {'PREÇO':>12} {'DISPONÍVEL':>15}")
+    with conn:
+        for indice, info in enumerate(conn.execute(sql), start=1):
+            #Desempacota "info"
+            id, nome, preco, estoque = int(info['id_produto']), info['nome'], int(info['preco']), int(info['estoque'])
+            #Aplica as informações do produto no dicionário
+            produtos[indice] = {'id': id, 'nome': nome, 'preco': preco, 'estoque': estoque} 
+            rotulo = (f"[{indice}]")
+            print(f"{rotulo:<6} {nome:<20} {preco:>12.2f} {estoque:>15}")
+
+        escolha = int(input(f"\nEscolha o produto: "))
+        produto = produtos[escolha]
+        return produto
+
+print(escolher_produto())
