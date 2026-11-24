@@ -63,54 +63,21 @@ def comprar(id_cliente):
     cur = conn.cursor()
 
 
-    produtos = {}  #Criando agenda para guardar as infos e não chamar o db toda hora
-
-    print("Escolha o produto:\n")
-    print(f"{'':<4} {'PRODUTO':<20} {'PREÇO':>7} {'QUANTIDADE DISPONÍVEL':>25}")
-    for indice, infos in enumerate(conn.execute("""
-        SELECT id_produto, nome, preco, estoque                
-        FROM produtos"""), start=1):                  #Talvez poderia ser uma outra função para ler os produtos + desempacota
-
-        
-        id, nome, preco, estoque = infos['id_produto'],infos['nome'], int(infos['preco']), int(infos['estoque'])
-        #Por conta do row_factory, eu posso indicar a coluna para desempacotar
-
-        produtos[indice] = {'id':id, 'nome': nome, 'preco': preco, 'estoque': estoque}   #Adicionando na agenda
-        if produtos[indice]['estoque'] > 0:
-            print(f"[{indice}] {nome:<20} {preco:>10.2f} {estoque:>12}")                     
-
-
-    # for indice, informacoes in produtos.items():
-    #     id, nome, preco, estoque = informacoes
-    #     print(f"\nINDICE: {indice}")
-    #     print(f"ID: {produtos[indice][id]}")                        #Feito para verificar os produtos na agenda
-    #     print(f"NOME: {produtos[indice][nome]}")
-    #     print(f"PREÇO: {produtos[indice][preco]}")
-    #     print(f"ESTOQUE: {produtos[indice][estoque]}")
-
-
     #Processa a compra (Escolhe item+Quantidade ; confirma+baixa no estoque+ add no historico_compras/compras)
     with conn:
-        escolha = int(input(f"\nEscolha o item: "))
+        produto = escolher_produto(com_estoque=True)
         quantidade = int(input(f"Escolha a quantidade: "))
 
-        # print(f"\n\n{produtos[escolha]}\n\n")    #Confere a escolha se necessário
-
-        while quantidade>produtos[escolha]['estoque']:
+        while quantidade>produto['estoque']:
             print(f"\nQuantidade de itens muito alta")
             quantidade = int(input(f"Escolha novamente:"))
-
-
-        # print(f"Produto: {produtos[escolha]['nome']}")
-        # print(f"Quantidade: {quantidade}")                                  #Mostra as informações do produto escolhido
-        # print(f"Valor do produto: {produtos[escolha]['preco']}")
         
-        valor_total = quantidade * produtos[escolha]['preco']
+        valor_total = quantidade * produto['preco']
         print(f"Valor total: R${valor_total}")
 
         #Chama confirmar_escolha() para finalizar ou não a compra
         if confirmar_escolha("Confirmar Compra? ('s'/'n')"):
-            if baixa_estoque(conn, produtos[escolha]['id'], quantidade):
+            if baixa_estoque(conn, produto['id'], quantidade):
 
                 #Inserindo as informações em historico_de_compras e compras
                 cur.execute("""INSERT INTO historico_de_compras
@@ -124,7 +91,7 @@ def comprar(id_cliente):
                 cur.execute("""INSERT INTO compras
                                 (id_compra, id_produto, quantidade, valor_unidade)
                                 VALUES (?,?,?,?)""",
-                                (id_compra, produtos[escolha]['id'], quantidade, produtos[escolha]['preco'])
+                                (id_compra, produto['id'], quantidade, produto['preco'])
                 )
 
                 ##Finalizando, caso seja confirmado: finaliza as atualizações. Ao contrário tudo será perdido.
@@ -147,7 +114,6 @@ def baixa_estoque(conn, id_produto, quantidade_baixa):
         )
     return cur.rowcount == 1
 
-
 def confirmar_escolha(pergunta):
     while True:
         resposta = input(f"{pergunta}: ").strip().lower()
@@ -156,7 +122,6 @@ def confirmar_escolha(pergunta):
         if resposta in ('n', 'nao'):
             return False
         print(f"Resposta Inválida. Digite novamente.")
-
 
 def escolher_cliente():
     conn = sqlite3.connect('e-commerce.db')
@@ -182,7 +147,8 @@ def escolher_produto(com_estoque=False):
     conn = sqlite3.connect('e-commerce.db')
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
-
+    #Nesta função acontece o aproveitamento da query ser tratada como uma string. Desta forma os parâmetros
+    #Serão sempre adicionados como argumentos True/False -> Resultando na "adição" 
     sql = 'SELECT * FROM produtos'
 
     if com_estoque:
@@ -205,4 +171,6 @@ def escolher_produto(com_estoque=False):
         produto = produtos[escolha]
         return produto
 
-print(escolher_produto())
+cliente = escolher_cliente()
+
+comprar(cliente['id'])
