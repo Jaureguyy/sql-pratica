@@ -8,7 +8,7 @@ Estão disponíveis as seguintes funções para interagir com o database dentro 
     -Cadastrar produto
     -Fazer compra (junto da baixa no estoque)(atualmente um item por vez)
     -Update no preço
-    -Update nas informações dos clientes
+    -Update no estoque
 
 """
 
@@ -26,7 +26,6 @@ def cadastrar_cliente():
                     )
     conn.close()
 
-
 def cadastrar_produto():
     conn = sqlite3.connect('e-commerce.db')
     cur = conn.cursor()
@@ -43,7 +42,6 @@ def cadastrar_produto():
                     )
     conn.close()
    
-
 def comprar(id_cliente):
     """
     Para realizar uma compra, as seguintes etapas são necessárias:
@@ -102,7 +100,6 @@ def comprar(id_cliente):
         else:
             print(f"\nCOMPRA CANCELADA!!!")
             conn.rollback()
-
 
 def baixa_estoque(conn, id_produto, quantidade_baixa):
     cur = conn.execute(
@@ -171,6 +168,21 @@ def escolher_produto(com_estoque=False):
         produto = produtos[escolha]
         return produto
 
-cliente = escolher_cliente()
+def atualizar_preco():
+    conn = sqlite3.connect('e-commerce.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
 
-comprar(cliente['id'])
+    produto = escolher_produto()
+    novo_preco = int(input(f"Digite o novo preço do produto: "))
+
+    cur.execute("""UPDATE produtos
+                   SET preco = ?
+                   WHERE id_produto = ?""",
+                   (novo_preco, produto['id'])
+                )
+    conn.commit()
+
+
+atualizar_preco()
+    
