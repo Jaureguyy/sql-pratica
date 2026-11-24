@@ -75,7 +75,7 @@ def comprar(id_cliente):
 
         #Chama confirmar_escolha() para finalizar ou não a compra
         if confirmar_escolha("Confirmar Compra? ('s'/'n')"):
-            if baixa_estoque(conn, produto['id'], quantidade):
+            if atualizar_estoque(conn, produto['id'], -quantidade):    #Importante reparar no '-' responsável pela baixa
 
                 #Inserindo as informações em historico_de_compras e compras
                 cur.execute("""INSERT INTO historico_de_compras
@@ -101,13 +101,13 @@ def comprar(id_cliente):
             print(f"\nCOMPRA CANCELADA!!!")
             conn.rollback()
 
-def baixa_estoque(conn, id_produto, quantidade_baixa):
+def atualizar_estoque(conn, id_produto, quantidade):
     cur = conn.execute(
             """UPDATE produtos
-               SET estoque = estoque - ?
+               SET estoque = estoque + ?
                 WHERE id_produto = ?
                 AND estoque >= ?""",
-                (quantidade_baixa, id_produto, quantidade_baixa)
+                (quantidade, id_produto, quantidade)
         )
     return cur.rowcount == 1
 
@@ -183,6 +183,5 @@ def atualizar_preco():
                 )
     conn.commit()
 
-
-atualizar_preco()
-    
+cliente = escolher_cliente()
+comprar(cliente['id'])
