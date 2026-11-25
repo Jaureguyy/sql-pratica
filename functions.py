@@ -193,3 +193,13 @@ def atualizar_preco():
                    (novo_preco, produto['id'])
                 )
     conn.commit()
+
+def dispatcher(opcao):
+    funcoes = {
+        '1': cadastrar_cliente,
+        '2': cadastrar_produto,
+        '3': comprar,
+        '4': atualizar_preco,
+        '5': repor_estoque,
+    }
+    return funcoes.get(opcao)
