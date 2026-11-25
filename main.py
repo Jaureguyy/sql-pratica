@@ -100,17 +100,28 @@ def comprar(id_cliente):
         else:
             print(f"\nCOMPRA CANCELADA!!!")
             conn.rollback()
+        conn.close()
 
 def atualizar_estoque(conn, id_produto, quantidade):
     cur = conn.execute(
             """UPDATE produtos
                SET estoque = estoque + ?
-                WHERE id_produto = ?
-                AND estoque >= ?""",
-                (quantidade, id_produto, quantidade)
+               WHERE id_produto = ?""",
+                (quantidade, id_produto)
         )
     return cur.rowcount == 1
 
+#Função de operação
+def repor_estoque():
+    conn = sqlite3.connect('e-commerce.db')
+
+    produto = escolher_produto(com_estoque=False)
+    quantidade = int(input(f"Quantidade de reposição: "))
+
+    with conn:
+        atualizar_estoque(conn, produto['id'], quantidade)
+    conn.close()
+        
 def confirmar_escolha(pergunta):
     while True:
         resposta = input(f"{pergunta}: ").strip().lower()
@@ -182,6 +193,3 @@ def atualizar_preco():
                    (novo_preco, produto['id'])
                 )
     conn.commit()
-
-cliente = escolher_cliente()
-comprar(cliente['id'])
