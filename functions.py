@@ -33,7 +33,7 @@ def cadastrar_produto():
     print("Vamos cadastrar um produto!\n")
     nome = input("Digite o nome: ")
     preco = input("Digite o preço: ")
-    estoque = input("Digite a qunatidade em estoque: ")
+    estoque = input("Digite a quantidade em estoque: ")
 
     with conn:
         cur.execute("""INSERT INTO produtos (nome, preco, estoque)
@@ -100,7 +100,14 @@ def comprar(id_cliente):
         else:
             print(f"\nCOMPRA CANCELADA!!!")
             conn.rollback()
-        conn.close()
+    conn.close()
+
+#Função de operação
+def realizar_compra():
+    cliente = escolher_cliente()
+    id_cliente = cliente['id']
+
+    comprar(id_cliente)
 
 def atualizar_estoque(conn, id_produto, quantidade):
     cur = conn.execute(
@@ -146,12 +153,12 @@ def escolher_cliente():
         clientes[indice] = {'id': id_cliente, 'nome': nome, 'cpf': cpf, 'estado': estado}
         print(f"[{indice}] {nome:<12}")
 
-    escolha = int(input(f"Escolha o cliente: "))
+    escolha = int(input(f"\nEscolha o cliente: "))
     # print(clientes[escolha])    #Confere se escolheu certo
     cliente = clientes[escolha]
     return cliente
 
-def escolher_produto(com_estoque=False):
+def escolher_produto(com_estoque=False):    
     conn = sqlite3.connect('e-commerce.db')
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
@@ -178,6 +185,7 @@ def escolher_produto(com_estoque=False):
         escolha = int(input(f"\nEscolha o produto: "))
         produto = produtos[escolha]
         return produto
+    conn.close()
 
 def atualizar_preco():
     conn = sqlite3.connect('e-commerce.db')
@@ -198,7 +206,7 @@ def dispatcher(opcao):
     funcoes = {
         '1': cadastrar_cliente,
         '2': cadastrar_produto,
-        '3': comprar,
+        '3': realizar_compra,
         '4': atualizar_preco,
         '5': repor_estoque,
     }
